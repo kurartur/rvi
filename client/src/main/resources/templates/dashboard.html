@@ -1,0 +1,504 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Dashboard</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            let getTestsCompanyId = function() {
+                return $('#tests-company-id').val();
+            }
+
+            $.ajax({
+                url: "http://localhost:8080/rs/stats/count",
+                dataType: "json",
+                crossOrigin: true,
+                success: function (data) {
+                    $('#mongoRowCount').text(data.count);
+                }
+            });
+            $.ajax({
+                url: "http://localhost:8080/is/stats/count",
+                dataType: "json",
+                crossOrigin: true,
+                success: function (data) {
+                    $('#postgresRowCount').text(data.count);
+                }
+            });
+            $("#populateMongo").click(function() {
+                $.post('http://localhost:8080/rs/stats/regenerate')
+                    .done(function(data) {
+                        console.log(data);
+                    });
+            })
+            $("#populatePostgres").click(function() {
+                $.post('http://localhost:8080/is/stats/regenerate')
+                    .done(function(data) {
+                        console.log(data);
+                    });
+            })
+
+            $('.test1 .reactive button.sum').click(function() {
+                let container = $('.test1 .reactive');
+                let eventSource = new EventSource("http://localhost:8080/rs/stats?companyId=" + getTestsCompanyId());
+                let sum = 0;
+                let count = 0;
+                eventSource.onmessage = function(event) {
+                    let data = JSON.parse(event.data);
+                    sum += data.amount;
+                    $('.result .revenue', container).text(sum);
+                    $('.result .total-stats', container).text(++count);
+                }
+                eventSource.onerror = function(event) {
+                    console.log(event);
+                    if (event.eventPhase == EventSource.CLOSED) {
+                        eventSource.close();
+                        $('.status', container).text("Done");
+                    }
+                }
+            });
+
+            $('.test1 .imperative button.sum').click(function() {
+                let container = $('.test1 .imperative');
+                $.get('http://localhost:8080/is/stats?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        let sum = 0;
+                        for (let i = 0; i < data.length; i++) {
+                            sum += data[i].amount;
+                            $('.result .revenue', container).text(sum);
+                        }
+                        $('.result .revenue', container).text(sum);
+                        $('.result .total-stats', container).text(data.length);
+                    });
+            });
+
+            $('.test1 .ismongo button.sum').click(function() {
+                let container = $('.test1 .ismongo');
+                $.get('http://localhost:8080/ismongo/stats?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        let sum = 0;
+                        for (let i = 0; i < data.length; i++) {
+                            sum += data[i].amount;
+                            $('.result .revenue', container).text(sum);
+                        }
+                        $('.result .revenue', container).text(sum);
+                        $('.result .total-stats', container).text(data.length);
+                    });
+            });
+
+            $('.test1 .r2dbc button.sum').click(function() {
+                let container = $('.test1 .r2dbc');
+                let eventSource = new EventSource("http://localhost:8080/r2dbc/stats?companyId=" + getTestsCompanyId());
+                let sum = 0;
+                let count = 0;
+                eventSource.onmessage = function(event) {
+                    let data = JSON.parse(event.data);
+                    sum += data.amount;
+                    $('.result .revenue', container).text(sum);
+                    $('.result .total-stats', container).text(++count);
+                }
+                eventSource.onerror = function(event) {
+                    console.log(event);
+                    if (event.eventPhase == EventSource.CLOSED) {
+                        eventSource.close();
+                        $('.status', container).text("Done");
+                    }
+                }
+            });
+
+            $('.test2 .reactive button.sum').click(function() {
+                let container = $('.test2 .reactive');
+                $.get('http://localhost:8080/client/rs/stats/summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+
+            $('.test2 .r2dbc button.sum').click(function() {
+                let container = $('.test2 .r2dbc');
+                $.get('http://localhost:8080/client/r2dbc/stats/summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+
+            $('.test2 .imperative button.sum').click(function() {
+                let container = $('.test2 .imperative');
+                $.get('http://localhost:8080/client/is/stats/summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+
+            $('.test2 .ismongo button.sum').click(function() {
+                let container = $('.test2 .ismongo');
+                $.get('http://localhost:8080/client/ismongo/stats/summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+
+            $('.test3 .reactive button.sum').click(function() {
+                let container = $('.test3 .reactive');
+                $.get('http://localhost:8080/rs/stats/summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+
+            $('.test3 .imperative button.sum').click(function() {
+                let container = $('.test3 .imperative');
+                $.get('http://localhost:8080/is/stats/summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+
+            $('.test3 .r2dbc button.sum').click(function() {
+                let container = $('.test3 .r2dbc');
+                $.get('http://localhost:8080/r2dbc/stats/summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+
+            $('.test3 .ismongo button.sum').click(function() {
+                let container = $('.test3 .ismongo');
+                $.get('http://localhost:8080/ismongo/stats/summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+
+            $('.test4 .reactive button.sum').click(function() {
+                let container = $('.test4 .reactive');
+                $.get('http://localhost:8080/rs/stats/fetching-all-summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+
+            $('.test4 .r2dbc button.sum').click(function() {
+                let container = $('.test4 .r2dbc');
+                $.get('http://localhost:8080/r2dbc/stats/fetching-all-summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+
+            $('.test4 .imperative button.sum').click(function() {
+                let container = $('.test4 .imperative');
+                $.get('http://localhost:8080/is/stats/fetching-all-summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+
+            $('.test4 .ismongo button.sum').click(function() {
+                let container = $('.test4 .ismongo');
+                $.get('http://localhost:8080/ismongo/stats/fetching-all-summary?companyId=' + getTestsCompanyId())
+                    .done(function(data) {
+                        $('.result .revenue', container).text(data.amount);
+                        $('.result .total-stats', container).text(data.count);
+                    });
+            });
+        });
+    </script>
+</head>
+<body>
+    <h4>Data status</h4>
+    <table>
+        <tr>
+            <th>Database</th>
+            <th>Row count</th>
+            <th></th>
+        </tr>
+        <tr>
+            <td>MongoDB</td>
+            <td id="mongoRowCount"></td>
+            <td><button id="populateMongo">(re)populate</button></td>
+        </tr>
+        <tr>
+            <td>PostgreSQL</td>
+            <td id="postgresRowCount"></td>
+            <td><button id="populatePostgres">(re)populate</button></td>
+        </tr>
+    </table>
+
+    <h4>Tests</h4>
+    <table>
+        <tr>
+            <th>Company ID <input id="tests-company-id" type="text" value="1"/></th>
+            <th>Reactive mongo</th>
+            <th>Imperative</th>
+            <th>r2dbc</th>
+            <th>Imperative mongo</th>
+        </tr>
+        <tr class="test1">
+            <td>Fetch all stats on the frontend and summarize</td>
+            <td class="reactive">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="imperative">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="r2dbc">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="ismongo">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr class="test2">
+            <td>Fetch all stats on the client backend and summarize</td>
+            <td class="reactive">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="imperative">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="r2dbc">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="ismongo">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr class="test3">
+            <td>Summarize on the microservice backend database</td>
+            <td class="reactive">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="imperative">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="r2dbc">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="ismongo">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr class="test4">
+            <td>Summarize on the microservice backend</td>
+            <td class="reactive">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="imperative">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="r2dbc">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="ismongo">
+                <button class="sum">do</button>
+                <span class="status"></span>
+                <br/>
+                <table class="result">
+                    <tr>
+                        <td>Revenue</td>
+                        <td class="revenue"></td>
+                    </tr>
+                    <tr>
+                        <td>Total stats</td>
+                        <td class="total-stats"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
